@@ -1,0 +1,102 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.wsheng.solr</groupId>
+  <artifactId>wsheng-solr_app</artifactId>
+  <packaging>war</packaging>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>solr_app Maven Webapp</name>
+  <url>http://maven.apache.org</url>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.8.2</version>
+      <scope>test</scope>
+    </dependency>
+    
+    <!-- Solrj is available in the official Maven repository. 
+    	Add the following dependency to your pom.xml to use SolrJ -->
+    <dependency>
+               <artifactId>solr-solrj</artifactId>
+               <groupId>org.apache.solr</groupId>
+               <version>4.7.0</version>
+               <type>jar</type>
+               <scope>compile</scope>
+               <exclusions>
+               		<exclusion>
+               			<groupId>org.slf4j</groupId>
+ 						<artifactId>slf4j-api</artifactId>
+               		</exclusion>
+               </exclusions>
+        </dependency>
+        
+    <!-- if you need to use the EmbeddedSolrServer, you need to add the solr-core dependency too. -->
+    <dependency>
+               <artifactId>solr-core</artifactId>
+               <groupId>org.apache.solr</groupId>
+               <version>4.7.0</version>
+               <type>jar</type>
+               <scope>compile</scope>
+        </dependency>
+        
+    <!-- Also, if using EmbeddedSolrServer, keep in mind that Solr depends on the Servlet API. This may already be present in your web based applications, but even command line will require a dependency like so:
+
+     -->
+    <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>3.0-alpha-1</version>
+        </dependency>
+        
+     <!-- If you see any exceptions saying NoClassDefFoundError, you will also need to include: -->
+<!--     <dependency> -->
+<!--             <groupId>org.slf4j</groupId> -->
+<!--             <artifactId>slf4j-simple</artifactId> -->
+<!--             <version>1.5.6</version> -->
+<!--             <exclusions> -->
+<!--             	<exclusion> -->
+<!--             		 <groupId>org.slf4j</groupId> -->
+<!--   					<artifactId>slf4j-api</artifactId> -->
+<!--             	</exclusion> -->
+<!--             </exclusions> -->
+<!--         </dependency> -->
+
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+ 			<artifactId>slf4j-api</artifactId>
+ 			<version>1.5.6</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.5.6</version>
+		</dependency>
+        
+        
+    <dependency>
+    		<groupId>com.sun.jersey</groupId>
+    		<artifactId>jersey-client</artifactId>
+    		<version>1.12</version>
+    </dependency>
+    
+    <dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>5.1.26</version>
+		</dependency>
+		
+	<dependency>
+         <groupId>commons-logging</groupId>
+         <artifactId>commons-logging</artifactId>
+         <version>1.1.1</version>
+     </dependency>
+    
+  </dependencies>
+  <build>
+    <finalName>solr_app</finalName>
+  </build>
+</project>

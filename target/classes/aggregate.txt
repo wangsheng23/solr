@@ -1,0 +1,23 @@
+实现增量导入。
+query界面的全面了解。
+
+ 1. Facet 查询。
+
+ * 1) http://martin3000.iteye.com/blog/1330106
+ * 2) http://macrochen.iteye.com/blog/1337576
+ * 3) http://www.cnblogs.com/hoojo/archive/2011/10/21/2220431.html
+ 
+ 2. 定义的理解：
+ copy field，dynamic field的理解。
+ 
+ 3. 分词器等的理解。
+ 
+ 
+ URLConnectionFactory用于生成各种collection下的url
+ 
+ SolrImport extends SolrAction
+ 
+ 
+ Solr Cloud, Solr index server and Solr searcher server separated.
+ 
+ Solr performance enhancement and Tomcat tuning. 

@@ -15,7 +15,7 @@ import com.sun.jersey.api.client.WebResource;
 
 /**
  * @author Josh Wang(Sheng)
- * @email swang6@email.com
+ * @email  joshwang23@hotmail.com
  */
 public class HttpUtils {
     

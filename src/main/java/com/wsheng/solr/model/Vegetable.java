@@ -6,14 +6,15 @@ package com.wsheng.solr.model;
 import org.apache.solr.client.solrj.beans.Field;
 
 /**
- * 注意上面的属性是和在solr\conf目录下的schema.xml中可以找到有关于field属性的配置对应的。
- * 如果你Index JavaBean中出现的属性在schema.xml的field配置无法找到，那么出出现unknown filed错误。
+ * Note:
+ * 下面的属性和在solr\conf目录下的schema.xml中关于field属性的配置对应。
+ * 如果你Index JavaBean中出现的属性在schema.xml的field配置中无法找到，将出现unknown filed错误。
  * 
  * @author Josh Wang(Sheng)
  *
  * @email  josh_wang23@hotmail.com
  */
-public class Vegetable extends SolrBean<String> {
+public class Vegetable extends SolrBean<String, Vegetable> {
 
 	@Field
     private String name;

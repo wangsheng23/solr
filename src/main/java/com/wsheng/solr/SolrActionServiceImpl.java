@@ -4,23 +4,26 @@
 package com.wsheng.solr;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrQuery.ORDER;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
-import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
 
-import com.wsheng.solr.model.SolrBean;
 import com.wsheng.solr.query.QueryField;
+import com.wsheng.solr.util.CommonsUtils;
+import com.wsheng.solr.util.ExceptionUtils;
+import com.wsheng.solr.util.LoggerUtils;
 import com.wsheng.solr.util.QueryUtils;
 
 /**
@@ -30,70 +33,144 @@ import com.wsheng.solr.util.QueryUtils;
  */
 public class SolrActionServiceImpl extends AbstractSolrServer implements ISolrActionService {
 	
+	protected static Logger logger = Logger.getLogger(SolrActionServiceImpl.class);
 
-	public SolrDocumentList query(String query) {
+	public QueryResponse query(String query) {
 		SolrParams params = new SolrQuery(query);
-		SolrDocumentList list = null;
+		QueryResponse response = null;
 		try {
-			QueryResponse response = server.query(params);
-			list = response.getResults();
+			response = server.query(params);
 		} catch (SolrServerException e) {
-			e.printStackTrace();
+			LoggerUtils.error(logger, "Query failed for the query: " + query + "	" + ExceptionUtils.getStackTraceMsg(e));
 		}
-		return list;
+		return response;
+	}
+	
+	public QueryResponse query(ModifiableSolrParams params) {
+
+		QueryResponse response = null;
+		try {
+			response = server.query(params);
+		} catch (SolrServerException e) {
+			LoggerUtils.error(logger, "Query docs by  ModifiableSolrParams failed "  + ExceptionUtils.getStackTraceMsg(e));
+		}
+		return response;
 	}
 
-	public void addDoc(SolrInputDocument doc) {
+	public QueryResponse query(SolrQuery params) {
+		QueryResponse response = null;
 		try {
-			UpdateResponse response = server.add(doc);
-			System.out.println(response.getStatus() + "  ---  " + response.getQTime());
-			
-			server.commit(); // required
+			response = server.query(params);
+			return response;
 		} catch (SolrServerException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+			LoggerUtils.error(logger, "Query docs by SolrQuery failed "  + ExceptionUtils.getStackTraceMsg(e));
 		}
+		return response;
+	}
+
+	/**1.
+	 * SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");  
+String time = "lostTime:["+sdf.format(new Date())+" TO "+sdf.format(new Date())+"]";
+
+2. > 查询
+
+3. 
+	 * @param <T>
+	 */
+	public QueryResponse query(List<QueryField<?>> queryFields, int start, int rows) {
+		
+		StringBuffer paramsBuilder = new StringBuffer();
+		
+		// the sort filed should be saved in the order map because of the sort function. can't be HashMap here
+		Map<String, ORDER> orderFields	= new LinkedHashMap<String, ORDER>();
+		
+		List<String> facetFields 	   	= new ArrayList<>();
+		List<String> highlightFields 	= new ArrayList<>();
+		
+		for (QueryField<?> field : queryFields) {
+			paramsBuilder = QueryUtils.appendQuery(field, paramsBuilder);
+			
+			if (field.isSort())
+				orderFields.put(field.getName(), field.getSortType());
+			if (field.isHighlight())
+				highlightFields.add(field.getName());
+			if (field.isFacet()) 
+				facetFields.add(field.getName());
+		}
+	
+		SolrQuery query = new SolrQuery(paramsBuilder.toString());
+		for (Map.Entry<String, ORDER> sortField : orderFields.entrySet()) {
+			query.addSort(sortField.getKey(), sortField.getValue());
+		}
+		// Add Facet Field
+		if (facetFields.size() > 0) {
+			query.setFacet(true).setFacetMinCount(1).setFacetLimit(100);
+			for (String facetFieldName : facetFields) {
+				query.addFacetField(facetFieldName);
+			}
+		}
+		
+		if (highlightFields.size() > 0) {
+			query.setHighlight(true);
+			query.setHighlightSimplePre("<font color=\'red\'>"); // html渲染
+	        query.setHighlightSimplePost("</font>"); 
+	        query.setHighlightFragsize(200); // 设置每个分片的最大长度
+	        
+	        for (String highLightFieldName : highlightFields) {
+	        	query.addHighlightField(highLightFieldName);
+	        	// query.setParam("hl.fl", highLightFieldName);
+	        }
+		}
+		
+		// 是否分页
+		if (start != -1 && rows != -1) {
+			query.setStart(start);
+			query.setRows(rows);
+		}
+		
+		LoggerUtils.info(logger, " query is: " + CommonsUtils.decode(query.toString()));	
+		System.out.println(" query is: " + CommonsUtils.decode(query.toString()));
+
+		try {
+			QueryResponse response = server.query(query);
+			return response;
+		} catch (SolrServerException e) {
+			LoggerUtils.error(logger, "Query docs by QueryFields failed "  + ExceptionUtils.getStackTraceMsg(e));
+		}
+		return null;
 		
 	}
 
-	public void addDocs(Collection<SolrInputDocument> docs) {
+	public UpdateResponse addDoc(SolrInputDocument doc) {
+		UpdateResponse response = null;
+		
 		try {
-			UpdateResponse response = server.add(docs);
-			System.out.println(response.getStatus() + "  ---  " + response.getQTime());
+			response = server.add(doc);
+			server.commit(); // required
 			
+		} catch (SolrServerException e) {
+			LoggerUtils.error(logger, "Add doc failed "  + ExceptionUtils.getStackTraceMsg(e));
+		} catch (IOException e) {
+			LoggerUtils.error(logger, "Add doc failed "  + ExceptionUtils.getStackTraceMsg(e));
+		}
+		
+		return response;
+	}
+
+	public UpdateResponse addDocs(Collection<SolrInputDocument> docs) {
+		UpdateResponse response = null;
+		try {
+			response = server.add(docs);
 			server.commit();
 		} catch (SolrServerException e) {
-			e.printStackTrace();
+			LoggerUtils.error(logger, "Add docs failed "  + ExceptionUtils.getStackTraceMsg(e));
 		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void addBean(SolrBean<String> bean) {
-		try {
-			UpdateResponse response = server.addBean(bean);
-			System.out.println(response.getStatus() + "  ---  " + response.getQTime());
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (SolrServerException e) {
-			e.printStackTrace();
+			LoggerUtils.error(logger, "Add docs failed "  + ExceptionUtils.getStackTraceMsg(e));
 		}
 		
+		return response;
 	}
 
-	public void addBeans(Collection<SolrBean<String>> beans) {
-		try {
-			UpdateResponse response = server.addBeans(beans);
-			System.out.println(response.getStatus() + "  ---  " + response.getQTime());
-			server.commit(); // commit 后才保存到索引库
-		} catch (SolrServerException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-	}
 
 	public void removeDoc(String id, boolean needCommit) {
 		try {
@@ -101,9 +178,9 @@ public class SolrActionServiceImpl extends AbstractSolrServer implements ISolrAc
 			if (needCommit)
 				server.commit();
 		} catch (SolrServerException e) {
-			e.printStackTrace();
+			LoggerUtils.error(logger, "Remove doc failed "  + ExceptionUtils.getStackTraceMsg(e));
 		} catch (IOException e) {
-			e.printStackTrace();
+			LoggerUtils.error(logger, "Remove doc failed "  + ExceptionUtils.getStackTraceMsg(e));
 		}
 		
 	}
@@ -114,9 +191,9 @@ public class SolrActionServiceImpl extends AbstractSolrServer implements ISolrAc
 			if (needCommit)
 				server.commit();
 		} catch (SolrServerException e) {
-			e.printStackTrace();
+			LoggerUtils.error(logger, "Remove docs failed "  + ExceptionUtils.getStackTraceMsg(e));
 		} catch (IOException e) {
-			e.printStackTrace();
+			LoggerUtils.error(logger, "Remove docs failed "  + ExceptionUtils.getStackTraceMsg(e));
 		}
 		
 	}
@@ -128,91 +205,11 @@ public class SolrActionServiceImpl extends AbstractSolrServer implements ISolrAc
 			if (needCommit)
 				server.commit();
 		} catch (SolrServerException e) {
-			e.printStackTrace();
+			LoggerUtils.error(logger, "Remove docs failed "  + ExceptionUtils.getStackTraceMsg(e));
 		} catch (IOException e) {
-			e.printStackTrace();
+			LoggerUtils.error(logger, "Remove docs failed "  + ExceptionUtils.getStackTraceMsg(e));
 		}
 		
 	}
-
-	public SolrDocumentList queryAll(ModifiableSolrParams params) {
-
-		SolrDocumentList docs = null;
-		try {
-			QueryResponse response = server.query(params);
-			docs = response.getResults();
-		} catch (SolrServerException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return docs;
-	}
-
-	public SolrDocumentList query(SolrQuery params) {
-		try {
-			QueryResponse response = server.query(params);
-			SolrDocumentList list = response.getResults();
-			return list;
-		} catch (SolrServerException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-
-	public SolrDocumentList query(List<QueryField> queryFields, int start, int rows) {
-		
-StringBuilder paramsBuilder = new StringBuilder();
-		
-		Map<String, ORDER> orderFields = new HashMap<String, ORDER>();
-		
-		for (QueryField field : queryFields) {
-			paramsBuilder = QueryUtils.appendQuery(field, paramsBuilder);
-			
-			if (field.isSort())
-				orderFields.put(field.getName(), field.getSortType());
-		}
-System.out.println(" param is : " + paramsBuilder.toString());	
-		SolrQuery query = new SolrQuery(paramsBuilder.toString());
-		for (Map.Entry<String, ORDER> sortField : orderFields.entrySet()) {
-			query.addSort(sortField.getKey(), sortField.getValue());
-		}
-		
-		query.setFacet(true).setFacetMinCount(1).setFacetLimit(100)
-		.addFacetField("name");
-		
-System.out.println(" query is: " + query);		
-
-		//是否分页
-		if (start != -1 && rows != -1) {
-			query.setStart(start);
-			query.setRows(rows);
-		}
-	
-
-		try {
-			QueryResponse response = server.query(query);
-			SolrDocumentList list = response.getResults();
-			
-			// 输出分片信息
-//			List<FacetField> facets = response.getFacetFields();
-//			for (FacetField facet : facets) {
-//				List<Count> facetCounts = facet.getValues();
-//				for (FacetField.Count count : facetCounts) {
-//					System.out.println(count.getName() + " : " + count.getCount());
-//				}
-//			}
-//			
-			
-			return list;
-		} catch (SolrServerException e) {
-			e.printStackTrace();
-		}
-		return null;
-		
-	}
-	
-
 	
 }

@@ -12,12 +12,10 @@ import org.apache.solr.client.solrj.beans.Field;
  *
  * @email  josh_wang23@hotmail.com
  */
-public class SolrBean<PK extends Serializable> {
+public class SolrBean<PK extends Serializable, T extends SolrBean<PK, T>> {
 
-	@Field //setter方法上添加Annotation也是可以的
+	@Field 
     public PK id;
-    
-    
     
     public PK getId() {
         return id;

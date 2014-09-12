@@ -1,7 +1,7 @@
 实现增量导入。
-query界面的全面了解。
+query界面的全面了解。--P167（Searching)
 
- 1. Facet 查询。
+ 1. Facet 查询。 -> 用于分类
 
  * 1) http://martin3000.iteye.com/blog/1330106
  * 2) http://macrochen.iteye.com/blog/1337576
@@ -17,7 +17,12 @@ query界面的全面了解。
  
  SolrImport extends SolrAction
  
+ P274- The Well-configured Solr Instance.
  
  Solr Cloud, Solr index server and Solr searcher server separated.
  
  Solr performance enhancement and Tomcat tuning. 
+ 
+ 4. schema.xml, solrconfig.xml + doc to figure out the issue.
+ 
+ 5. solrj wiki.

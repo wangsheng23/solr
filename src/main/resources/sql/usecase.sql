@@ -6,7 +6,7 @@
 
 --在window环境下因为本地默认编码是gbk。所以如果不设定client的编码去链接MySQL的数据库，如果表内数据使用utf-8的编码存储，一般结果就是？？？
 --简单的解决办法是：
---mysql -h ip -u username-p passwd --default-character-set=gbk
+--mysql -h ip -u username -p passwd --default-character-set=gbk
 --notes: 还可以在进入console后，通过set命令来指定， set charset gbk 同样能看到中文字符
 
 

@@ -77,3 +77,16 @@ INSERT INTO solr_item_category VALUES("2", "3");
 INSERT INTO solr_item_category VALUES("3", "1");
 INSERT INTO solr_item_category VALUES("4", "1");
 INSERT INTO solr_item_category VALUES("5", "2");
+
+--Solr提供方式：不能定制化，扩展性差。 所有index必须在同一时间统一更新
+--通知模型做index？（加重MQTT负担： 可通过使用另一个MQTT解决？）
+CREATE TABLE IF NOT EXISTS index_nets(
+	B_ID CHAR(10) NOT NULL,
+	T_ID CHAR(10) NOT NULL,
+	O_STATUS ENUM('pending','success','failed'),
+	O_TIMES	INT	NOT	NULL,
+	PRIORITY INT NOT NULL,
+	LAST_UPDATE_TIME TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	COMMENTS VARCHAR(100) DEFAULT NULL,
+	PRIMARY KEY(B_ID, T_ID)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
